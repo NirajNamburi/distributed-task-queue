@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dtq"
+version = "0.1.0"
+description = "A distributed task queue in pure Python with Redis as a dumb broker, multiprocessing-based workers, atomic Lua state transitions, exponential-backoff retries, dead-letter queues, heartbeat-based zombie recovery, structured logging, and Prometheus metrics."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "dtq contributors" }]
+license = { text = "MIT" }
+keywords = ["task queue", "redis", "multiprocessing", "distributed systems"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: System :: Distributed Computing",
+]
+dependencies = [
+    "redis>=5.0",
+    "prometheus-client>=0.20",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "fakeredis[lua]>=2.23",
+]
+
+[project.scripts]
+dtq = "dtq.cli:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+dtq = ["lua/*.lua"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
