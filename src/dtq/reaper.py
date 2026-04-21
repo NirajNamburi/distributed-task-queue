@@ -28,7 +28,6 @@ from typing import Callable
 from dtq.broker import Broker
 from dtq.config import Settings
 from dtq.logging_setup import get_logger
-from dtq.metrics import inc_reaper_promoted, inc_reaper_recovered
 
 
 log = get_logger(__name__)
@@ -75,14 +74,12 @@ class Reaper(threading.Thread):
         """Run one promote+requeue pass. Public for tests."""
         promoted = self.broker.promote_due_retries(now=self._clock())
         if promoted:
-            inc_reaper_promoted(promoted)
             log.info("promoted due retries", extra={"count": promoted})
 
         dead = self.broker.dead_workers(self._clock(), self.settings.worker_timeout_s)
         for worker_id in dead:
             requeued, dlq_count = self.broker.requeue_dead_worker(worker_id)
             if requeued or dlq_count:
-                inc_reaper_recovered(requeued + dlq_count)
                 log.warning(
                     "recovered dead worker",
                     extra={

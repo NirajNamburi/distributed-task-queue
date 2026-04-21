@@ -43,10 +43,7 @@ def settings(tmp_path) -> Settings:
         claim_block_s=0.1,
         shutdown_grace_s=2.0,
         reaper_interval_s=0.05,
-        metrics_enabled=False,
-        metrics_port=0,
         log_level="WARNING",
-        log_json=False,
     )
 
 

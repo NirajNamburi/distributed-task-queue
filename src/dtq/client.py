@@ -14,7 +14,6 @@ from typing import Any, Callable
 from dtq.broker import Broker
 from dtq.config import Settings
 from dtq.logging_setup import get_logger
-from dtq.metrics import inc_enqueued
 from dtq.registry import callable_to_path
 from dtq.task import Task, TaskField, TaskState
 
@@ -79,7 +78,6 @@ class TaskClient:
             max_retries=self.settings.max_retries if max_retries is None else int(max_retries),
         )
         self.broker.enqueue(task)
-        inc_enqueued(dotted)
         log.info(
             "task enqueued",
             extra={"task_id": task.id, "func": dotted, "max_retries": task.max_retries},

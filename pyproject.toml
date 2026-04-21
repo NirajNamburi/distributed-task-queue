@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "dtq"
 version = "0.1.0"
-description = "A distributed task queue in pure Python with Redis as a dumb broker, multiprocessing-based workers, atomic Lua state transitions, exponential-backoff retries, dead-letter queues, heartbeat-based zombie recovery, structured logging, and Prometheus metrics."
+description = "A distributed task queue in pure Python with Redis as a dumb broker, multiprocessing-based workers, atomic Lua state transitions, exponential-backoff retries, dead-letter queues, and heartbeat-based zombie recovery."
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "dtq contributors" }]
@@ -22,7 +22,6 @@ classifiers = [
 ]
 dependencies = [
     "redis>=5.0",
-    "prometheus-client>=0.20",
 ]
 
 [project.optional-dependencies]

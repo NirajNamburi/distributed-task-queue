@@ -32,7 +32,7 @@ def _short(v: Any, n: int = 80) -> str:
 
 def main() -> int:
     settings = Settings.from_env()
-    setup_logging(settings.log_level, json_mode=False)
+    setup_logging(settings.log_level)
     client = TaskClient(settings)
 
     log.info("=" * 70)

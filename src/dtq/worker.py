@@ -10,7 +10,6 @@ Lifecycle:
 
   master.start()
       │
-      ├─ start Prometheus exporter (master-only)
       ├─ start Reaper thread
       ├─ for i in range(N): spawn Process(target=worker_loop)
       └─ install SIGTERM/SIGINT -> set stop_event, join with deadline
@@ -39,7 +38,6 @@ import traceback
 import uuid
 from typing import Optional
 
-from dtq import metrics
 from dtq.broker import Broker
 from dtq.config import Settings
 from dtq.logging_setup import get_logger, setup_logging
@@ -71,8 +69,7 @@ def worker_loop(
     production we construct a fresh Broker so each child gets its own
     connection (forking shared connections is undefined behavior).
     """
-    setup_logging(settings.log_level, settings.log_json)
-    metrics.init_metrics(settings)
+    setup_logging(settings.log_level)
     own_broker = False
     if broker is None:
         broker = Broker(settings)
@@ -150,10 +147,6 @@ def _execute_one(worker_id: str, broker: Broker, settings: Settings, task_id: st
         result = func(*args, **kwargs)
     except UnknownTaskError as exc:
         # Unresolvable task is a config/deploy bug; do not waste retries on it.
-        elapsed = time.perf_counter() - started
-        metrics.observe_duration(func_path, elapsed)
-        metrics.inc_completed(func_path, "failed")
-        metrics.inc_dlq(func_path)
         broker.fail_dlq(
             worker_id,
             task_id,
@@ -167,13 +160,9 @@ def _execute_one(worker_id: str, broker: Broker, settings: Settings, task_id: st
         )
         return
     except BaseException as exc:
-        elapsed = time.perf_counter() - started
-        metrics.observe_duration(func_path, elapsed)
         new_attempts = attempts + 1
         tb = traceback.format_exc(limit=20)
         if new_attempts > max_retries:
-            metrics.inc_completed(func_path, "failed")
-            metrics.inc_dlq(func_path)
             broker.fail_dlq(
                 worker_id,
                 task_id,
@@ -198,7 +187,6 @@ def _execute_one(worker_id: str, broker: Broker, settings: Settings, task_id: st
                 cap=settings.backoff_cap_s,
             )
             run_at = time.time() + delay
-            metrics.inc_retried(func_path)
             broker.fail_retry(
                 worker_id,
                 task_id,
@@ -221,8 +209,6 @@ def _execute_one(worker_id: str, broker: Broker, settings: Settings, task_id: st
         return
 
     elapsed = time.perf_counter() - started
-    metrics.observe_duration(func_path, elapsed)
-    metrics.inc_completed(func_path, "success")
     broker.complete(worker_id, task_id, result)
     log_w.info(
         "task succeeded",
@@ -267,14 +253,10 @@ class WorkerPool:
     def start(self, processes: int | None = None, block: bool = True) -> None:
         """Spawn the workers and (optionally) block until shutdown."""
         n = processes or self.settings.worker_processes
-        setup_logging(self.settings.log_level, self.settings.log_json)
+        setup_logging(self.settings.log_level)
         log.info(
             "worker pool starting",
-            extra={
-                "processes": n,
-                "redis_url": self.settings.redis_url,
-                "metrics_port": self.settings.metrics_port if self.settings.metrics_enabled else None,
-            },
+            extra={"processes": n, "redis_url": self.settings.redis_url},
         )
 
         # Best-effort connection check so we fail fast on a bad REDIS_URL.
@@ -283,8 +265,6 @@ class WorkerPool:
         except Exception as exc:
             log.error("cannot reach redis", extra={"error": str(exc), "redis_url": self.settings.redis_url})
             raise
-
-        metrics.start_exporter(self.settings, self.broker)
 
         for i in range(n):
             worker_id = self._make_worker_id(i)

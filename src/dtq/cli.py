@@ -64,7 +64,7 @@ def _cmd_enqueue(args, settings: Settings) -> int:
     client = TaskClient(settings)
     pos = [_parse_arg(a) for a in (args.args or [])]
     kw = _parse_kw(args.kw or [])
-    task_id = client.delay(args.func, *pos, max_retries=args.max_retries, **kw)
+    task_id = client.delay(args.task_path, *pos, max_retries=args.max_retries, **kw)
     print(task_id)
     if args.wait:
         try:
@@ -122,7 +122,7 @@ def build_parser() -> argparse.ArgumentParser:
     sw.set_defaults(func=_cmd_worker)
 
     se = sub.add_parser("enqueue", help="Enqueue a task by dotted path")
-    se.add_argument("func", help="Dotted path, e.g. dtq.tasks.calculate_primes")
+    se.add_argument("task_path", metavar="FUNC", help="Dotted path, e.g. dtq.tasks.calculate_primes")
     se.add_argument("args", nargs="*", help="Positional args (each JSON-decoded; falls back to string)")
     se.add_argument("--kw", action="append", default=[], help="Keyword arg as k=v (value JSON-decoded)")
     se.add_argument("--max-retries", type=int, default=None)
@@ -149,7 +149,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> int:
     settings = Settings.from_env()
-    setup_logging(settings.log_level, settings.log_json)
+    setup_logging(settings.log_level)
     args = build_parser().parse_args(argv)
     return int(args.func(args, settings) or 0)
 

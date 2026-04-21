@@ -73,13 +73,8 @@ class Settings:
     # Reaper.
     reaper_interval_s: float = field(default_factory=lambda: _env_float("DTQ_REAPER_INTERVAL_S", 5.0))
 
-    # Metrics.
-    metrics_enabled: bool = field(default_factory=lambda: _env_str("DTQ_METRICS_ENABLED", "1") not in ("0", "false", "False"))
-    metrics_port: int = field(default_factory=lambda: _env_int("DTQ_METRICS_PORT", 9090))
-
     # Logging.
     log_level: str = field(default_factory=lambda: _env_str("DTQ_LOG_LEVEL", "INFO"))
-    log_json: bool = field(default_factory=lambda: _env_str("DTQ_LOG_JSON", "1") not in ("0", "false", "False"))
 
     @classmethod
     def from_env(cls) -> "Settings":
