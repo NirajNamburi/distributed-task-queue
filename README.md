@@ -4,7 +4,7 @@
 Redis as a dumb message broker, implements every state transition as an atomic
 Lua script, guarantees no task is lost across worker crashes via the reliable-queue
 pattern, recovers in-flight work from dead workers with a heartbeat-driven reaper,
-and demonstrably bypasses the Python GIL — measured at **6.78× wall-clock speedup**
+and demonstrably bypasses the Python GIL — measured at 6.78× wall-clock speedup
 on a pure-Python CPU-bound benchmark (16 workers vs 1, 16-logical-CPU host).
 
 No Celery, no RQ, no Dramatiq. The orchestration engine is built directly on
